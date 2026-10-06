@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
+import { PostModel } from '../../models/post.model';
 
 @Component({
   selector: 'app-publicaciones',
@@ -7,5 +8,5 @@ import { Component } from '@angular/core';
   styleUrl: './publicaciones.component.css'
 })
 export class PublicacionesComponent {
-
+  @Input() posts: PostModel[] = [];
 }
