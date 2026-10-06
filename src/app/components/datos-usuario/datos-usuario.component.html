@@ -1,1 +1,10 @@
-<p>datos-usuario works!</p>
+@if (usuario) {
+  <div>
+    <img [src]="usuario.image" [alt]="usuario.username">
+
+    <h2>{{ usuario.firstName }} {{ usuario.lastName }}</h2>
+    <p>{{ usuario.username }}</p>
+    <p>{{ usuario.email }}</p>
+    <p>{{ usuario.phone }}</p>
+  </div>
+}
