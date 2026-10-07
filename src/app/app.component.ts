@@ -1,12 +1,13 @@
 import { Component } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { of, forkJoin } from 'rxjs';
 import { switchMap, map, catchError } from 'rxjs/operators';
 import { UserModel } from './models/user.model';
 import { PostModel } from './models/post.model';
-import { CommentModel } from './models/comment.model';
 import { DatosUsuarioComponent } from './components/datos-usuario/datos-usuario.component';
 import { PublicacionesComponent } from './components/publicaciones/publicaciones.component';
+import { CommentService } from './services/comment.service';
+import { PostService } from './services/post.service';
+import { UserService } from './services/user.service';
 
 @Component({
   selector: 'app-root',
@@ -21,7 +22,7 @@ export class AppComponent {
   mensaje: string = '';
   cargando: boolean = false;
 
-  constructor(private http: HttpClient) {}
+  constructor(private userService: UserService, private postService: PostService, private commentService: CommentService) {}
 
   buscarUsuario(username: string) {
     if (!username || !username.trim()) {
@@ -33,9 +34,7 @@ export class AppComponent {
 
     this.cargando = true;
     this.mensaje = '';
-    const userUrl = `https://dummyjson.com/users/filter?key=username&value=${username.trim()}`;
-
-    this.http.get<{ users: UserModel[] }>(userUrl).pipe(
+    this.userService.buscarUsuarioPorUsername(username.trim()).pipe(
       // Paso A: Cambiar a la petición de publicaciones del usuario si este existe
       switchMap(respuestaUser => {
         if (!respuestaUser.users || respuestaUser.users.length === 0) {
@@ -43,8 +42,7 @@ export class AppComponent {
           return of(null);
         }
         this.usuario = respuestaUser.users[0];
-        const postsUrl = `https://dummyjson.com/posts/user/${this.usuario.id}`;
-        return this.http.get<{ posts: PostModel[] }>(postsUrl);
+        return this.postService.buscarPostsPorUsuarioId(this.usuario.id);
       }),
       // Paso B: Por cada publicación, buscar sus comentarios en paralelo con forkJoin
       switchMap(respuestaPosts => {
@@ -58,8 +56,7 @@ export class AppComponent {
         }
 
         const postsConComentarios$ = listaPosts.map(post => {
-          const commentsUrl = `https://dummyjson.com/comments/post/${post.id}`;
-          return this.http.get<{ comments: CommentModel[] }>(commentsUrl).pipe(
+          return this.commentService.buscarComentariosPorPostId(post.id).pipe(
             map(respuestaComments => ({
               ...post,
               comments: respuestaComments.comments || []
